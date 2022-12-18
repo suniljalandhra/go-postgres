@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq" // postgres golang driver
 	"github.com/suniljalandhra/go-postgres/models"
 )
 
@@ -116,7 +117,7 @@ func UpdateStock(w http.ResponseWriter, r *http.Request) {
 
 func DeleteStock(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	id, err := strconv.ParseInt(params["id"])
+	id, err := strconv.Atoi(params["id"])
 	if err != nil {
 		log.Fatalf("Unable to convert string to int, %v", err)
 	}
@@ -231,4 +232,16 @@ func deleteStock(id int64) int64 {
 
 	defer db.Close()
 	sqlStatement := `DELETE FROM stocks WHERE stockid=$1`
+
+	res, err := db.Exec(sqlStatement, id)
+	if err != nil {
+		log.Fatalf("Unable to execute the query. %v", err)
+	}
+	rowsAffected, err := res.RowsAffected()
+
+	if err != nil {
+		log.Fatalf("Unable to get the number of rows affected. %v", err)
+	}
+	fmt.Printf("total rows affected: %d\n", rowsAffected)
+	return rowsAffected
 }
